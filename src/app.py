@@ -1,8 +1,10 @@
 import sys
 import time
 
-from bitalino import BITalino
+import bitalino
 import matplotlib.pyplot as plt
+
+from modules.device import get_device
 
 
 MAC_ADDRESS = "98:D3:91:FE:44:E9"
@@ -11,20 +13,10 @@ SAMPLING_RATE = 1000  # Hz
 N_SAMPLES = 100
 
 
-def get_device(mac_address):
-    device = None
-    try:
-        device = BITalino(mac_address)
-    except Exception as e:
-        print("ERROR: The MAC address or serial port for the device is "
-              "invalid.", file=sys.stderr)
-    return device
-
-
 if __name__ == "__main__":
     # デバイスの取得
     device = get_device(MAC_ADDRESS)
-    if type(device) != BITalino:
+    if type(device) !=  bitalino.BITalino:
         print("ERROR: Could not get the device.", file=sys.stderr)
         exit(1)
 
