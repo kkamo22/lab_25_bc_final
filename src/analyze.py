@@ -29,6 +29,7 @@ if __name__ == "__main__":
     label, data = read_csv(pathlib.Path(filename).resolve())
 
     emg = calc_emg(data)
+    emg = np.abs(emg)
 
     # EMS を計算
     ema1 = calc_ema(emg, 0.9)
@@ -45,4 +46,5 @@ if __name__ == "__main__":
     ax.legend()
     ax.set_xlabel("Index")
     ax.set_ylabel("Output")
+    ax.set_ylim(0.0, 1.0)
     plt.show()
