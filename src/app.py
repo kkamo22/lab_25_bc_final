@@ -9,6 +9,9 @@ from modules.device import get_device, calc_emg
 
 MAC_ADDRESS = "98:D3:91:FE:44:E9"
 
+EMG_PIN = 1
+ACC_PIN = 0
+
 SAMPLING_RATE = 1000  # Hz
 N_SAMPLES = 100
 
@@ -25,7 +28,7 @@ if __name__ == "__main__":
         exit(1)
 
     # 計測準備
-    device.start(SAMPLING_RATE, [0])
+    device.start(SAMPLING_RATE, [ACC_PIN])
 
     # データ計測
     start_time = 0.0
@@ -33,8 +36,6 @@ if __name__ == "__main__":
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.set_xlabel("Index")
-    ax.set_ylabel("EMG / ms")
 
     emgs = []
     emgs_ema = []
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     while True:
         data = device.read(N_SAMPLES)
         emg = calc_emg(data[:, 5][0], BITS, VCC, GAIN)
-        emg = abs(emg)
+        #emg = abs(emg)
         emgs.append(emg)
         emgs_ema.append(
             rho*emgs_ema[-1] + (1 - rho)*emg
@@ -58,5 +59,8 @@ if __name__ == "__main__":
             ax.cla()
             ax.plot(emgs)
             ax.plot(emgs_ema)
+            ax.set_xlabel("Index")
+            ax.set_ylabel("EMG / ms")
+            ax.set_ylim(-1.0, 1.0)
             plt.draw()
             plt.pause(0.1)

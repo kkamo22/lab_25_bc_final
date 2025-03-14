@@ -33,6 +33,7 @@ if __name__ == "__main__":
     device.start(SAMPLING_RATE, [0])
 
     # データ計測
+    label = input("Input the label > ")
     mode = input("Input the name of the mode > ")
 
     print("Ready to start measurement...")
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     print("Go!")
 
     start_time = time.time()
-    result = [["buccinator"]]
+    result = [[label]]
     while True:
         data = device.read(N_SAMPLES)
         data_a1 = data[:, 5]
