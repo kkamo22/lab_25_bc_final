@@ -4,13 +4,17 @@ import time
 import bitalino
 import matplotlib.pyplot as plt
 
-from modules.device import get_device
+from modules.device import get_device, calc_emg
 
 
 MAC_ADDRESS = "98:D3:91:FE:44:E9"
 
 SAMPLING_RATE = 1000  # Hz
 N_SAMPLES = 100
+
+BITS = 10
+VCC = 3.3
+GAIN = 1009
 
 
 if __name__ == "__main__":
@@ -24,16 +28,35 @@ if __name__ == "__main__":
     device.start(SAMPLING_RATE, [0])
 
     # データ計測
-    start_time = time.time()
-    running_time = 10.0
-    y = []
+    start_time = 0.0
+    update_time = 0.5
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.set_xlabel("Index")
+    ax.set_ylabel("EMG / ms")
+
+    emgs = []
+    emgs_ema = []
+    rho = 0.95
     while True:
         data = device.read(N_SAMPLES)
-        data_a1 = data[:, 5]
+        emg = calc_emg(data[:, 5][0], BITS, VCC, GAIN)
+        emg = abs(emg)
+        emgs.append(emg)
+        emgs_ema.append(
+            rho*emgs_ema[-1] + (1 - rho)*emg
+                if len(emgs_ema) > 0
+                else emg)
+        if len(emgs) > 100:
+            emgs = emgs[-100:]
+            emgs_ema = emgs_ema[-100:]
 
-        y.extend(data_a1)
-
-        if time.time() - start_time > running_time:
-            break
-    plt.plot(y)
-    plt.show()
+        current_time = time.time()
+        if current_time - start_time > update_time:
+            start_time = current_time
+            ax.cla()
+            ax.plot(emgs)
+            ax.plot(emgs_ema)
+            plt.draw()
+            plt.pause(0.1)
