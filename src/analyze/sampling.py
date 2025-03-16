@@ -5,12 +5,9 @@ import sys
 import time
 
 import bitalino
-import matplotlib.pyplot as plt
-
-from modules.device import get_device
 
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
 
 MAC_ADDRESS = "98:D3:91:FE:44:E9"
 
@@ -18,6 +15,16 @@ SAMPLING_RATE = 1000  # Hz
 N_SAMPLES = 100
 
 MEASUREMENT_TIME = 10.0  # s
+
+
+def get_device(mac_address):
+    device = None
+    try:
+        device = bitalino.BITalino(mac_address)
+    except Exception as e:
+        print("ERROR: The MAC address or serial port for the device is "
+              "invalid.", file=sys.stderr)
+    return device
 
 
 if __name__ == "__main__":
@@ -30,7 +37,8 @@ if __name__ == "__main__":
     time.sleep(1.0)
 
     # 計測準備
-    device.start(SAMPLING_RATE, [0])
+    pin = int(input("Input the number of a pin > "))
+    device.start(SAMPLING_RATE, [pin])
 
     # データ計測
     label = input("Input the label > ")
