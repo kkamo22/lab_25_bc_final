@@ -1,4 +1,5 @@
 import math
+import os
 import sys
 import threading
 import time
@@ -7,6 +8,10 @@ import bitalino
 import numpy as np
 import pygame
 import pygame.locals
+
+
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
+IMG_DIR = os.path.join(ASSETS_DIR, "img")
 
 
 MAC_ADDRESS = "98:D3:91:FE:44:E9"
@@ -62,21 +67,22 @@ def add_ema(ema_list, new, rho):
 
 def make_honeycomb_pos_list(center, d, n):
     pos_list = []
+    hor = math.sqrt(3) / 2
     offsets = np.array([
-        ( d,  d/2),
-        ( d, -d/2),
-        ( 0, -d  ),
-        (-d, -d/2),
-        (-d,  d/2),
-        ( 0,  d  ),
+        ( hor*d,  d/2),
+        ( hor*d, -d/2),
+        (     0, -d  ),
+        (-hor*d, -d/2),
+        (-hor*d,  d/2),
+        (     0,  d  ),
     ])
     steps = np.array([
-        ( 0, -d  ),
-        (-d, -d/2),
-        (-d,  d/2),
-        ( 0,  d  ),
-        ( d,  d/2),
-        ( d, -d/2),
+        (     0, -d  ),
+        (-hor*d, -d/2),
+        (-hor*d,  d/2),
+        (     0,  d  ),
+        ( hor*d,  d/2),
+        ( hor*d, -d/2),
     ])
     i = 0
     count = 0
@@ -116,22 +122,28 @@ def sampling(device, accs, emgs, emgs_ema):
 def mainloop(screen, accs, emgs, emgs_ema):
     smiling = False
     num_of_honeycombs = 0
-    hc_pos_list = make_honeycomb_pos_list(np.array([200, 200]), 15, MAX_HC)
+    hc_pos_list = make_honeycomb_pos_list(np.array([200, 200]), 38, MAX_HC)
 
     # データが取得されるまで待機
     while len(emgs_ema) == 0:
         time.sleep(0.1)
+
+    hc_img = pygame.image.load(os.path.join(IMG_DIR, "honeycomb1.png"))
+    hc_img.convert()
+    hc_img = pygame.transform.scale(hc_img, (50, 50))
+    hc_img = pygame.transform.rotate(hc_img, 90)
 
     start_time = 0.0
     update_time = 0.5
     while not stop_event.is_set():
         # 描画
         screen.fill(color=(200, 200, 200))
-        pygame.draw.circle(screen, (160, 160, 0), (200, 200), 5)
+        screen.blit(hc_img, (175, 175))
 
         for i in range(num_of_honeycombs):
             pos = hc_pos_list[i]
-            pygame.draw.circle(screen, (255, 255, 0), pos, 5)
+            #pygame.draw.circle(screen, (255, 255, 0), pos, 5)
+            screen.blit(hc_img, pos - np.array([50, 50])/2)
 
         pygame.display.update()
 
