@@ -19,6 +19,9 @@ HC_DIST = 38
 
 hc_pos_list = []
 
+# サーフェイスの設定
+COLORKEY = (0, 255, 0)
+
 
 def load_hc_imgs(img_dir):
     """ハニカムの画像をロードする.
@@ -71,7 +74,8 @@ def make_hc_pos_list(center, d, n):
 def make_hc_surface(screen_size, num_of_honeycombs):
     """ハニカムを描画したレイヤを生成する."""
     surface = pygame.surface.Surface(screen_size)
-    surface.convert()
+    surface.fill(COLORKEY)
+    surface.set_colorkey(COLORKEY)
     center = np.array(screen_size) / 2
     offset = -np.array([1, 1]) * HC_SIZE / 2
     surface.blit(hc_imgs[HC_BASE], center + offset)

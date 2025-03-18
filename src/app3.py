@@ -13,6 +13,9 @@ from modules.device import (
     start_device,
     sample_data,
 )
+from modules.facial import (
+    make_gauge_surface,
+)
 from modules.honeycomb import (
     HC_BASE,
     HC_STRONG,
@@ -33,8 +36,8 @@ IMG_DIR = os.path.join(ASSETS_DIR, "img")
 MAC_ADDRESS = "98:D3:91:FE:44:E9"
 
 # 画面の設定
-SCREEN_W = 400
-SCREEN_H = 400
+SCREEN_W = 640
+SCREEN_H = 480
 
 # その他
 SMILE_THRES = 0.08  # mV
@@ -69,6 +72,10 @@ def main_t_func(screen, accs, emgs, emgs_ema):
             np.array([SCREEN_W, SCREEN_H]), num_of_honeycombs)
         screen.blit(hc_surface, (0, 0))
 
+        gauge_surface = make_gauge_surface(
+            np.array([SCREEN_W, SCREEN_H]), emgs_ema[-1])
+        screen.blit(gauge_surface, (0, 0))
+
         pygame.display.update()
 
         # 笑顔の判定
@@ -102,7 +109,7 @@ def main_t_func(screen, accs, emgs, emgs_ema):
 if __name__ == "__main__":
     # pygame 初期化
     pygame.init()
-    screen = pygame.display.set_mode(size=(400, 400))
+    screen = pygame.display.set_mode(size=(SCREEN_W, SCREEN_H))
 
     # ハニカム準備
     load_hc_imgs(IMG_DIR)
