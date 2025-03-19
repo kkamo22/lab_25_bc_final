@@ -2,16 +2,20 @@ import itertools
 import math
 import os
 import sys
+import time
 
 import numpy as np
 import pygame
 
 
 # 画像ラベル
-HC_BASE = "honeycomb4.png"
-HC_STRONG = "honeycomb2.png"
-HC_NORMAL = "honeycomb1.png"
-HC_WEAK = "honeycomb3.png"
+HC_BASE = "hc_base.png"
+HC_STRONG = "hc_strong.png"
+HC_NORMAL = "hc_normal.png"
+HC_WEAK = "hc_weak.png"
+
+HC_INACTIVE_1 = "hc_inactive_1.png"
+HC_INACTIVE_2 = "hc_inactive_2.png"
 
 hc_imgs = {}
 
@@ -25,6 +29,9 @@ HC_DIST_VER = HC_DIST
 HC_OFFSET = -np.array([1, 1]) * HC_SIZE / 2
 
 hc_pos_list = []
+
+HC_STATE_INACTIVE = 0
+HC_STATE_ACTIVE = 1
 
 # フィールドの設定
 FIELD_W = 2*5 + 1
@@ -61,16 +68,33 @@ FIELD_1 = [
 ]
 
 # サーフェイスの設定
-COLORKEY = (0, 255, 0)
+COLORKEY = (255, 255, 255)
 
 
 class Honeycomb:
-    def __init__(self, label, pos):
-        self.label = label
+    def __init__(self, pos, label):
         self.pos = pos
+        self.label = label
+        self.state = HC_STATE_ACTIVE if self.label == HC_BASE \
+                     else HC_STATE_INACTIVE
+
+        self.anim_last_time = 0.0
+        self.anim_duration = 1.0
+        self.anim_count = 1
+        self.anim_label = self.label
 
     def render(self, surface):
-        surface.blit(hc_imgs[self.label], self.pos)
+        """ハニカムを描画する."""
+        if self.state == HC_STATE_INACTIVE:
+            current_time = time.time()
+            if current_time - self.anim_last_time > self.anim_duration:
+                self.anim_last_time = current_time
+                self.anim_count = 1 if self.anim_count == 0 else 0
+                self.anim_label = [
+                    HC_INACTIVE_1, HC_INACTIVE_2][self.anim_count]
+        elif self.state == HC_STATE_ACTIVE:
+            self.anim_label = self.label
+        surface.blit(hc_imgs[self.anim_label], self.pos)
 
 
 def load_hc_imgs(img_dir):
@@ -78,7 +102,9 @@ def load_hc_imgs(img_dir):
 
     この関数はアプリの初期化段階で呼び出す必要がある.
     """
-    labels = [HC_BASE, HC_STRONG, HC_NORMAL, HC_WEAK]
+    labels = [
+        HC_BASE, HC_STRONG, HC_NORMAL, HC_WEAK, HC_INACTIVE_1, HC_INACTIVE_2
+    ]
     for label in labels:
         img = pygame.image.load(os.path.join(img_dir, label))
         img.convert()
@@ -142,29 +168,25 @@ def make_field_info(field, screen_center):
     field_f = list(itertools.chain.from_iterable(field))
     num_of_hcs = max([i for i in field_f if isinstance(i, int)])
     field_info["num_of_hcs"] = num_of_hcs
-    pos_dict = {BASE: calc_hc_pos(field_f, BASE, screen_center)}
+    pos_list = [calc_hc_pos(field_f, BASE, screen_center)]
+    hcs = [Honeycomb(pos_list[0], HC_BASE)]
     for i in range(1, num_of_hcs + 1):
-        pos_dict[i] = calc_hc_pos(field_f, i, screen_center)
-    field_info["pos_dict"] = pos_dict
+        pos = calc_hc_pos(field_f, i, screen_center)
+        pos_list.append(pos)
+        hcs.append(Honeycomb(pos, HC_WEAK))
+    field_info["pos_list"] = pos_list
+    field_info["hcs"] = hcs
     return field_info
 
 
-def make_hc_surface(screen_size, num_of_honeycombs):
+def make_hc_surface(screen_size, field_info):
     """ハニカムを描画したレイヤを生成する."""
     surface = pygame.surface.Surface(screen_size)
+    surface.convert()
     surface.fill(COLORKEY)
     surface.set_colorkey(COLORKEY)
-    center = np.array(screen_size) / 2
-    offset = -np.array([1, 1]) * HC_SIZE / 2
-    surface.blit(hc_imgs[HC_BASE], center + offset)
-    for i in range(num_of_honeycombs):
-        pos = hc_pos_list[i]
-        surface.blit(hc_imgs[HC_NORMAL], pos + offset)
 
-    # DEBUG
-    field_f = list(itertools.chain.from_iterable(FIELD_1))
-    for i in range(1, 90 + 1):
-        pos = calc_hc_pos(field_f, i, center)
-        surface.blit(hc_imgs[HC_WEAK], pos)
+    for hc in field_info["hcs"]:
+        hc.render(surface)
 
     return surface

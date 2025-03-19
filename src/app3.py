@@ -22,8 +22,10 @@ from modules.honeycomb import (
     HC_NORMAL,
     HC_WEAK,
     hc_imgs,
+    FIELD_1,
     load_hc_imgs,
     make_hc_pos_list,
+    make_field_info,
     make_hc_surface,
 )
 
@@ -38,6 +40,7 @@ MAC_ADDRESS = "98:D3:91:FE:44:E9"
 # 画面の設定
 SCREEN_W = 640
 SCREEN_H = 480
+SCREEN_SIZE = np.array([SCREEN_W, SCREEN_H])
 
 SCREEN_CENTER = np.array([SCREEN_W, SCREEN_H]) / 2
 
@@ -61,6 +64,9 @@ def main_t_func(screen, accs, emgs, emgs_ema):
     smiling = False
     num_of_honeycombs = 0
 
+    # フィールド読み込み
+    field_info = make_field_info(FIELD_1, SCREEN_CENTER)
+
     # データが取得されるまで待機
     while len(emgs_ema) == 0:
         time.sleep(0.1)
@@ -70,12 +76,10 @@ def main_t_func(screen, accs, emgs, emgs_ema):
     while not stop_event.is_set():
         # 描画
         screen.fill(color=(200, 200, 200))
-        hc_surface = make_hc_surface(
-            np.array([SCREEN_W, SCREEN_H]), num_of_honeycombs)
+        hc_surface = make_hc_surface(SCREEN_SIZE, field_info)
         screen.blit(hc_surface, (0, 0))
 
-        gauge_surface = make_gauge_surface(
-            np.array([SCREEN_W, SCREEN_H]), emgs_ema[-1])
+        gauge_surface = make_gauge_surface(SCREEN_SIZE, emgs_ema[-1])
         screen.blit(gauge_surface, (0, 0))
 
         pygame.display.update()
@@ -111,7 +115,6 @@ if __name__ == "__main__":
 
     # ハニカム準備
     load_hc_imgs(IMG_DIR)
-    make_hc_pos_list(np.array([SCREEN_W, SCREEN_H]) / 2, 38, MAX_HC)
 
     # デバイスの取得
     while True:
