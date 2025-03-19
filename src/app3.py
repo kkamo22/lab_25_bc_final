@@ -17,15 +17,11 @@ from modules.facial import (
     make_gauge_surface,
 )
 from modules.honeycomb import (
-    HC_BASE,
-    HC_STRONG,
-    HC_NORMAL,
-    HC_WEAK,
-    hc_imgs,
     FIELD_1,
     load_hc_imgs,
-    make_hc_pos_list,
     make_field_info,
+    activate_honeycomb,
+    deactivate_honeycomb,
     make_hc_surface,
 )
 
@@ -38,8 +34,8 @@ IMG_DIR = os.path.join(ASSETS_DIR, "img")
 MAC_ADDRESS = "98:D3:91:FE:44:E9"
 
 # 画面の設定
-SCREEN_W = 640
-SCREEN_H = 480
+SCREEN_W = 720
+SCREEN_H = 600
 SCREEN_SIZE = np.array([SCREEN_W, SCREEN_H])
 
 SCREEN_CENTER = np.array([SCREEN_W, SCREEN_H]) / 2
@@ -60,6 +56,15 @@ def sample_t_func(device, accs, emgs, emgs_ema):
         sample_data(device, accs, emgs, emgs_ema)
 
 
+def render_t_func(surfaces, field_info, emgs_ema):
+    """描画用スレッドの関数."""
+    while not stop_event.is_set():
+        hc_surface = make_hc_surface(SCREEN_SIZE, field_info)
+        gauge_surface = make_gauge_surface(SCREEN_SIZE, emgs_ema[-1])
+        surfaces["hc"] = hc_surface
+        surfaces["gauge"] = gauge_surface
+
+
 def main_t_func(screen, accs, emgs, emgs_ema):
     smiling = False
     num_of_honeycombs = 0
@@ -71,20 +76,27 @@ def main_t_func(screen, accs, emgs, emgs_ema):
     while len(emgs_ema) == 0:
         time.sleep(0.1)
 
+    # 描画用スレッドの準備
+    surfaces = {
+        "hc": make_hc_surface(SCREEN_SIZE, field_info),
+        "gauge": make_gauge_surface(SCREEN_SIZE, emgs_ema[-1]),
+    }
+    render_t = threading.Thread(
+        target=render_t_func, args=[surfaces, field_info, emgs_ema])
+    render_t.start()
+
     start_time = 0.0
     update_time = 0.5
     while not stop_event.is_set():
         # 描画
         screen.fill(color=(200, 200, 200))
-        hc_surface = make_hc_surface(SCREEN_SIZE, field_info)
-        screen.blit(hc_surface, (0, 0))
-
-        gauge_surface = make_gauge_surface(SCREEN_SIZE, emgs_ema[-1])
-        screen.blit(gauge_surface, (0, 0))
+        screen.blit(surfaces["hc"], (0, 0))
+        screen.blit(surfaces["gauge"], (0, 0))
 
         pygame.display.update()
 
         # 笑顔の判定
+        print(emgs_ema[-1])
         if emgs_ema[-1] > SMILE_THRES:
             if not smiling:
                 smiling = True
@@ -98,14 +110,18 @@ def main_t_func(screen, accs, emgs, emgs_ema):
             if current_time - start_time > update_time:
                 if num_of_honeycombs <= MAX_HC:
                     num_of_honeycombs += 1
+                    activate_honeycomb(field_info, num_of_honeycombs)
                     start_time = current_time
         else:
             if current_time - start_time > update_time:
                 if num_of_honeycombs > 0:
+                    deactivate_honeycomb(field_info, num_of_honeycombs)
                     num_of_honeycombs -= 1
                     start_time = current_time
 
         time.sleep(0.01)
+
+    render_t.join()
 
 
 if __name__ == "__main__":

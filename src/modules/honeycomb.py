@@ -1,6 +1,7 @@
 import itertools
 import math
 import os
+import random
 import sys
 import time
 
@@ -9,10 +10,11 @@ import pygame
 
 
 # 画像ラベル
-HC_BASE = "hc_base.png"
-HC_STRONG = "hc_strong.png"
-HC_NORMAL = "hc_normal.png"
-HC_WEAK = "hc_weak.png"
+HC_IMG_BASE = "hc_base.png"
+HC_IMG_1 = "hc1.png"
+HC_IMG_2 = "hc2.png"
+HC_IMG_3 = "hc3.png"
+HC_IMG_4 = "hc4.png"
 
 HC_INACTIVE_1 = "hc_inactive_1.png"
 HC_INACTIVE_2 = "hc_inactive_2.png"
@@ -20,9 +22,9 @@ HC_INACTIVE_2 = "hc_inactive_2.png"
 hc_imgs = {}
 
 # ハニカムの設定
-HC_SIZE = 50
+HC_SIZE = 65
 
-HC_DIST = 38
+HC_DIST = 50
 HC_DIST_HOR = HC_DIST * math.sqrt(3) / 2
 HC_DIST_VER = HC_DIST
 
@@ -68,20 +70,27 @@ FIELD_1 = [
 ]
 
 # サーフェイスの設定
-COLORKEY = (255, 255, 255)
+COLORKEY = (200, 200, 200)
 
 
 class Honeycomb:
     def __init__(self, pos, label):
         self.pos = pos
         self.label = label
-        self.state = HC_STATE_ACTIVE if self.label == HC_BASE \
+        self.state = HC_STATE_ACTIVE if self.label == HC_IMG_BASE \
                      else HC_STATE_INACTIVE
 
         self.anim_last_time = 0.0
         self.anim_duration = 1.0
         self.anim_count = 1
         self.anim_label = self.label
+
+    def activate(self, label):
+        self.state = HC_STATE_ACTIVE
+        self.label = label
+
+    def deactivate(self):
+        self.state = HC_STATE_INACTIVE
 
     def render(self, surface):
         """ハニカムを描画する."""
@@ -103,48 +112,19 @@ def load_hc_imgs(img_dir):
     この関数はアプリの初期化段階で呼び出す必要がある.
     """
     labels = [
-        HC_BASE, HC_STRONG, HC_NORMAL, HC_WEAK, HC_INACTIVE_1, HC_INACTIVE_2
+        HC_IMG_BASE,
+        HC_IMG_1,
+        HC_IMG_2,
+        HC_IMG_3,
+        HC_IMG_4,
+        HC_INACTIVE_1,
+        HC_INACTIVE_2
     ]
     for label in labels:
         img = pygame.image.load(os.path.join(img_dir, label))
         img.convert()
         img = pygame.transform.scale(img, (HC_SIZE, HC_SIZE))
-        img = pygame.transform.rotate(img, 90)
         hc_imgs[label] = img
-
-
-def make_hc_pos_list(center, d, n):
-    """ハニカムの座標のリストを生成する."""
-    hor = math.sqrt(3) / 2
-    offsets = np.array([
-        ( hor*d,  d/2),
-        ( hor*d, -d/2),
-        (     0, -d  ),
-        (-hor*d, -d/2),
-        (-hor*d,  d/2),
-        (     0,  d  ),
-    ])
-    steps = np.array([
-        (     0, -d  ),
-        (-hor*d, -d/2),
-        (-hor*d,  d/2),
-        (     0,  d  ),
-        ( hor*d,  d/2),
-        ( hor*d, -d/2),
-    ])
-    i = 0
-    count = 0
-    layer = 1
-    while i <= n:
-        i += 1
-        count += 1
-        if count > 6 * layer:
-            count = 1
-            layer += 1
-        l = (count - 1) // layer
-        m = (count - 1) % layer
-        pos = center + layer*offsets[l] + m*steps[l]
-        hc_pos_list.append(pos)
 
 
 def calc_hc_pos(field_f, target, screen_center):
@@ -169,14 +149,27 @@ def make_field_info(field, screen_center):
     num_of_hcs = max([i for i in field_f if isinstance(i, int)])
     field_info["num_of_hcs"] = num_of_hcs
     pos_list = [calc_hc_pos(field_f, BASE, screen_center)]
-    hcs = [Honeycomb(pos_list[0], HC_BASE)]
+    hcs = [Honeycomb(pos_list[0], HC_IMG_BASE)]
     for i in range(1, num_of_hcs + 1):
         pos = calc_hc_pos(field_f, i, screen_center)
         pos_list.append(pos)
-        hcs.append(Honeycomb(pos, HC_WEAK))
+        hcs.append(Honeycomb(pos, HC_IMG_1))
     field_info["pos_list"] = pos_list
     field_info["hcs"] = hcs
     return field_info
+
+
+def activate_honeycomb(field_info, n):
+    """ハニカムを 1 つ指定してアクティブ化する."""
+    hc = field_info["hcs"][n]
+    labels = [HC_IMG_1, HC_IMG_2, HC_IMG_3, HC_IMG_4]
+    hc.activate(random.choice(labels))
+
+
+def deactivate_honeycomb(field_info, n):
+    """ハニカムを 1 つ指定して非アクティブ化する."""
+    hc = field_info["hcs"][n]
+    hc.deactivate()
 
 
 def make_hc_surface(screen_size, field_info):
