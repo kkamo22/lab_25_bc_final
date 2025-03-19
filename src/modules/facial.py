@@ -37,7 +37,7 @@ def render_gauge(surface, emg):
         surface, GAUGE_COLOR_FULL, (
             GAUGE_X,
             GAUGE_Y,
-            GAUGE_W * emg / SMILE_MAX,
+            min(GAUGE_W * emg / SMILE_MAX, GAUGE_W),
             GAUGE_H))
     pygame.draw.rect(
         surface, GAUGE_COLOR_BAR, (BAR_X, BAR_Y, BAR_W, BAR_H))

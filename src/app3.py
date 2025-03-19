@@ -39,6 +39,8 @@ MAC_ADDRESS = "98:D3:91:FE:44:E9"
 SCREEN_W = 640
 SCREEN_H = 480
 
+SCREEN_CENTER = np.array([SCREEN_W, SCREEN_H]) / 2
+
 # その他
 SMILE_THRES = 0.08  # mV
 
@@ -79,16 +81,12 @@ def main_t_func(screen, accs, emgs, emgs_ema):
         pygame.display.update()
 
         # 笑顔の判定
-        print(f"EMG: {emgs_ema[-1]:.5f} mV  {num_of_honeycombs}",
-              file=sys.stderr)
         if emgs_ema[-1] > SMILE_THRES:
             if not smiling:
                 smiling = True
-                print("Smile!", file=sys.stderr)
         else:
             if smiling:
                 smiling = False
-                print("No smile...", file=sys.stderr)
 
         # ハニカム増減
         current_time = time.time()
