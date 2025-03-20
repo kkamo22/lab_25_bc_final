@@ -39,17 +39,17 @@ if __name__ == "__main__":
     emg = np.abs(emg)
 
     # EMS を計算
-    ema1 = calc_ema(emg, 0.9)
-    ema2 = calc_ema(emg, 0.95)
-    ema3 = calc_ema(emg, 0.99)
+    ema1 = calc_ema(emg, 0.80)
+    ema2 = calc_ema(emg, 0.90)
+    ema3 = calc_ema(emg, 0.95)
 
     # グラフを表示
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(emg, alpha=0.25, label="EMG")
-    ax.plot(ema1, alpha=0.25, label="EMA (ρ = 0.9)")
-    ax.plot(ema2, alpha=0.25, label="EMA (ρ = 0.95)")
-    ax.plot(ema3, alpha=0.25, label="EMA (ρ = 0.99)")
+    ax.plot(ema1, alpha=0.25, label="EMA (ρ = 0.80)")
+    ax.plot(ema2, alpha=0.25, label="EMA (ρ = 0.90)")
+    ax.plot(ema3, alpha=0.25, label="EMA (ρ = 0.95)")
     ax.legend()
     ax.set_xlabel("Index")
     ax.set_ylabel("Output")
