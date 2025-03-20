@@ -41,7 +41,7 @@ FIELD_H = 2*5 + 1
 
 BASE = 0
 
-FIELD_0 = [
+FIELD_TMP = [
     [None, None, None, None, None, None, None, None, None, None, None],
     [None, None, None, None, None, None, None, None, None, None, None],
     [None, None, None, None, None, None, None, None, None, None, None],
@@ -55,7 +55,7 @@ FIELD_0 = [
     [None, None, None, None, None, None, None, None, None, None, None],
 ]
 
-FIELD_1 = [
+FIELD_0 = [
     [None, None, None, None,   62,   61,   90, None, None, None, None],
     [None, None,   64,   63,   38,   37,   60,   89,   88, None, None],
     [  66,   65,   40,   39,   20,   19,   36,   59,   58,   87,   86],
@@ -67,6 +67,20 @@ FIELD_1 = [
     [None,   72,   73,   47,   48,   28,   50,   51,   79,   80, None],
     [None, None, None,   74,   75,   49,   77,   78, None, None, None],
     [None, None, None, None, None,   76, None, None, None, None, None],
+]
+
+FIELD_1 = [
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None, None, None,   20,   19,   36, None, None, None, None],
+    [None, None,   22,   21,    8,    7,   18,   35,   34, None, None],
+    [None, None,   23,    9,    2,    1,    6,   17,   33, None, None],
+    [None, None,   24,   10,    3, BASE,    5,   16,   32, None, None],
+    [None, None,   25,   11,   12,    4,   14,   15,   31, None, None],
+    [None, None, None,   26,   27,   13,   29,   30, None, None, None],
+    [None, None, None, None, None,   28, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
 ]
 
 # サーフェイスの設定
@@ -162,7 +176,7 @@ def make_field_info(field, screen_center):
 def activate_honeycomb(field_info, n):
     """ハニカムを 1 つ指定してアクティブ化する."""
     hc = field_info["hcs"][n]
-    labels = [HC_IMG_1, HC_IMG_2, HC_IMG_3, HC_IMG_4]
+    labels = [HC_IMG_1, HC_IMG_2, HC_IMG_3, HC_IMG_1]
     hc.activate(random.choice(labels))
 
 

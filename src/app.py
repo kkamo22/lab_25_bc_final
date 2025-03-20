@@ -28,7 +28,7 @@ if __name__ == "__main__":
         exit(1)
 
     # 計測準備
-    device.start(SAMPLING_RATE, [ACC_PIN])
+    device.start(SAMPLING_RATE, [ACC_PIN, EMG_PIN])
 
     # データ計測
     start_time = 0.0
@@ -39,10 +39,10 @@ if __name__ == "__main__":
 
     emgs = []
     emgs_ema = []
-    rho = 0.95
+    rho = 0.90
     while True:
         data = device.read(N_SAMPLES)
-        emg = calc_emg(data[:, 5][0], BITS, VCC, GAIN)
+        emg = calc_emg(data[:, 5 + EMG_PIN][0], BITS, VCC, GAIN)
         #emg = abs(emg)
         emgs.append(emg)
         emgs_ema.append(

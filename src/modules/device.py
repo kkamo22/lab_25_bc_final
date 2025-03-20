@@ -1,4 +1,5 @@
 import sys
+import time
 
 import bitalino
 
@@ -18,7 +19,7 @@ GAIN = 1009
 # 計測
 MAX_DATA_LEN = 100
 
-EMGS_EMA_RHO = 0.925
+EMGS_EMA_RHO = 0.80
 
 
 def get_device(mac_address):

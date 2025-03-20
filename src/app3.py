@@ -14,6 +14,8 @@ from modules.device import (
     sample_data,
 )
 from modules.facial import (
+    calibrate,
+    detect_smile,
     make_gauge_surface,
 )
 from modules.honeycomb import (
@@ -65,7 +67,7 @@ def render_t_func(surfaces, field_info, emgs_ema):
         surfaces["gauge"] = gauge_surface
 
 
-def main_t_func(screen, accs, emgs, emgs_ema):
+def main_t_func(device, screen, accs, emgs, emgs_ema):
     smiling = False
     num_of_honeycombs = 0
 
@@ -75,6 +77,8 @@ def main_t_func(screen, accs, emgs, emgs_ema):
     # データが取得されるまで待機
     while len(emgs_ema) == 0:
         time.sleep(0.1)
+
+    calibrate(device, screen, emgs_ema)
 
     # 描画用スレッドの準備
     surfaces = {
@@ -88,6 +92,8 @@ def main_t_func(screen, accs, emgs, emgs_ema):
     start_time = 0.0
     update_time = 0.5
     while not stop_event.is_set():
+        #sample_data(device, accs, emgs, emgs_ema)
+
         # 描画
         screen.fill(color=(200, 200, 200))
         screen.blit(surfaces["hc"], (0, 0))
@@ -95,9 +101,12 @@ def main_t_func(screen, accs, emgs, emgs_ema):
 
         pygame.display.update()
 
+        if num_of_honeycombs >= field_info["num_of_hcs"]:
+            break
+
         # 笑顔の判定
-        print(emgs_ema[-1])
-        if emgs_ema[-1] > SMILE_THRES:
+        #print(emgs_ema[-1])
+        if detect_smile(emgs_ema[-1]):
             if not smiling:
                 smiling = True
         else:
@@ -119,9 +128,9 @@ def main_t_func(screen, accs, emgs, emgs_ema):
                     num_of_honeycombs -= 1
                     start_time = current_time
 
-        time.sleep(0.01)
+        #time.sleep(0.01)
 
-    render_t.join()
+    raise KeyboardInterrupt
 
 
 if __name__ == "__main__":
@@ -150,7 +159,7 @@ if __name__ == "__main__":
     sample_t = threading.Thread(
         target=sample_t_func, args=[device, accs, emgs, emgs_ema])
     main_t = threading.Thread(
-        target=main_t_func, args=[screen, accs, emgs, emgs_ema])
+        target=main_t_func, args=[device, screen, accs, emgs, emgs_ema])
 
     # メインルーチン
     sample_t.start()
