@@ -129,11 +129,11 @@ def measure_smiling(device, emgs):
         time_data.append(time.time() - start_time)
         emg_data.append(emgs[-1])
         time.sleep(0.01)
-    filename = make_filename("smiling.csv")
-    with open(os.path.join(LOG_DIR, filename), "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerows(
-            [["time", "img"]] + [list(i) for i in zip(time_data, emg_data)])
+    #filename = make_filename("smiling.csv")
+    #with open(os.path.join(LOG_DIR, filename), "w", newline="") as f:
+    #    writer = csv.writer(f)
+    #    writer.writerows(
+    #        [["time", "img"]] + [list(i) for i in zip(time_data, emg_data)])
     ave = statistics.mean(emg_data)
     criteria["smiling_ave"] = ave
     print("AVERAGE:", criteria["smiling_ave"], "mV", file=sys.stderr)

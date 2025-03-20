@@ -83,6 +83,22 @@ FIELD_1 = [
     [None, None, None, None, None, None, None, None, None, None, None],
 ]
 
+FIELD_2 = [
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None,    2,    1,    3, None,    6,    4,    5, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, BASE, None, None, None, None, None],
+    [None,   11,   10, None, None, None, None, None,   14,   15, None],
+    [None, None, None,    9,    8, None,   12,   13, None, None, None],
+    [None, None, None, None, None,    7, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None, None, None, None],
+]
+
+FIELDS = [FIELD_1, FIELD_2]
+
 # サーフェイスの設定
 COLORKEY = (200, 200, 200)
 

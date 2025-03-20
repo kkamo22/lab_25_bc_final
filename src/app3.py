@@ -19,7 +19,7 @@ from modules.facial import (
     make_gauge_surface,
 )
 from modules.honeycomb import (
-    FIELD_1,
+    FIELDS,
     load_hc_imgs,
     make_field_info,
     activate_honeycomb,
@@ -41,6 +41,8 @@ SCREEN_H = 600
 SCREEN_SIZE = np.array([SCREEN_W, SCREEN_H])
 
 SCREEN_CENTER = np.array([SCREEN_W, SCREEN_H]) / 2
+
+BG_COLOR = (200, 200, 200)
 
 # その他
 SMILE_THRES = 0.08  # mV
@@ -68,69 +70,95 @@ def render_t_func(surfaces, field_info, emgs_ema):
 
 
 def main_t_func(device, screen, accs, emgs, emgs_ema):
-    smiling = False
-    num_of_honeycombs = 0
-
-    # フィールド読み込み
-    field_info = make_field_info(FIELD_1, SCREEN_CENTER)
-
     # データが取得されるまで待機
     while len(emgs_ema) == 0:
         time.sleep(0.1)
 
+    # キャリブレーション
     calibrate(device, screen, emgs_ema)
 
-    # 描画用スレッドの準備
-    surfaces = {
-        "hc": make_hc_surface(SCREEN_SIZE, field_info),
-        "gauge": make_gauge_surface(SCREEN_SIZE, emgs_ema[-1]),
-    }
-    render_t = threading.Thread(
-        target=render_t_func, args=[surfaces, field_info, emgs_ema])
-    render_t.start()
+    font = pygame.font.Font(None, 64)
 
-    start_time = 0.0
-    update_time = 0.5
-    while not stop_event.is_set():
-        #sample_data(device, accs, emgs, emgs_ema)
+    field_num = 0
+    while field_num < len(FIELDS):
+        smiling = False
+        num_of_honeycombs = 0
 
-        # 描画
-        screen.fill(color=(200, 200, 200))
-        screen.blit(surfaces["hc"], (0, 0))
-        screen.blit(surfaces["gauge"], (0, 0))
+        # フィールド読み込み
+        field_info = make_field_info(FIELDS[field_num], SCREEN_CENTER)
 
+        # 描画用スレッドの準備
+        surfaces = {
+            "hc": make_hc_surface(SCREEN_SIZE, field_info),
+            "gauge": make_gauge_surface(SCREEN_SIZE, emgs_ema[-1]),
+        }
+        #render_t = threading.Thread(
+        #    target=render_t_func, args=[surfaces, field_info, emgs_ema])
+        #render_t.start()
+
+        screen.fill(color=BG_COLOR)
+        screen.blit(font.render(f"STAGE {field_num + 1}", True, (32, 32, 32)), (300, 200))
         pygame.display.update()
+        start_time = time.time()
+        while time.time() - start_time < 3.0:
+            time.sleep(0.05)
 
-        if num_of_honeycombs >= field_info["num_of_hcs"]:
-            break
+        start_time = 0.0
+        update_time = 0.5
+        while not stop_event.is_set():
+            #sample_data(device, accs, emgs, emgs_ema)
 
-        # 笑顔の判定
-        #print(emgs_ema[-1])
-        if detect_smile(emgs_ema[-1]):
-            if not smiling:
-                smiling = True
-        else:
+            # 描画
+            screen.fill(color=BG_COLOR)
+            hc_surface = make_hc_surface(SCREEN_SIZE, field_info)
+            gauge_surface = make_gauge_surface(SCREEN_SIZE, emgs_ema[-1])
+            surfaces["hc"] = hc_surface
+            surfaces["gauge"] = gauge_surface
+            screen.blit(surfaces["hc"], (0, 0))
+            screen.blit(surfaces["gauge"], (0, 0))
+
+            pygame.display.update()
+
+            if num_of_honeycombs >= field_info["num_of_hcs"]:
+                time.sleep(1.0)
+                break
+
+            # 笑顔の判定
+            #print(emgs_ema[-1])
+            if detect_smile(emgs_ema[-1]):
+                if not smiling:
+                    smiling = True
+            else:
+                if smiling:
+                    smiling = False
+
+            # ハニカム増減
+            current_time = time.time()
             if smiling:
-                smiling = False
+                if current_time - start_time > update_time:
+                    if num_of_honeycombs <= MAX_HC:
+                        num_of_honeycombs += 1
+                        activate_honeycomb(field_info, num_of_honeycombs)
+                        start_time = current_time
+            else:
+                if current_time - start_time > update_time:
+                    if num_of_honeycombs > 0:
+                        deactivate_honeycomb(field_info, num_of_honeycombs)
+                        num_of_honeycombs -= 1
+                        start_time = current_time
 
-        # ハニカム増減
-        current_time = time.time()
-        if smiling:
-            if current_time - start_time > update_time:
-                if num_of_honeycombs <= MAX_HC:
-                    num_of_honeycombs += 1
-                    activate_honeycomb(field_info, num_of_honeycombs)
-                    start_time = current_time
-        else:
-            if current_time - start_time > update_time:
-                if num_of_honeycombs > 0:
-                    deactivate_honeycomb(field_info, num_of_honeycombs)
-                    num_of_honeycombs -= 1
-                    start_time = current_time
+            #time.sleep(0.01)
 
-        #time.sleep(0.01)
+        screen.fill(color=BG_COLOR)
+        screen.blit(font.render(f"Clear!", True, (32, 32, 32)), (300, 200))
+        pygame.display.update()
+        start_time = time.time()
+        while time.time() - start_time < 5.0:
+            time.sleep(0.05)
 
-    raise KeyboardInterrupt
+        field_num += 1
+
+    stop_event.set()
 
 
 if __name__ == "__main__":
@@ -166,7 +194,7 @@ if __name__ == "__main__":
     main_t.start()
 
     try:
-        while True:
+        while not stop_event.is_set():
             for event in pygame.event.get():
                 if event.type == pygame.locals.QUIT:
                     pygame.quit()
